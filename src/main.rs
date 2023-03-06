@@ -2,17 +2,17 @@ mod util;
 
 use std::{env, error, fs, io::Write};
 use clap::{App, Arg, ArgMatches};
-use triangulate::{Triangulate, Vertex, builders};
+use triangulate::{formats, Vertex, PolygonList};
 
-const PARAM_IN_FILE: &'static str = "in-file";
-const PARAM_OUT_FILE: &'static str = "out-file";
-const PARAM_DEBUG_DIRECTORY: &'static str = "debug-directory";
-const PARAM_DEBUG_NO_LABELS: &'static str = "debug-no-labels";
-const PARAM_DEBUG_LEVEL: &'static str = "debug-level";
+const PARAM_IN_FILE: &str = "in-file";
+const PARAM_OUT_FILE: &str = "out-file";
+const PARAM_DEBUG_DIRECTORY: &str = "debug-directory";
+const PARAM_DEBUG_NO_LABELS: &str = "debug-no-labels";
+const PARAM_DEBUG_LEVEL: &str = "debug-level";
 
-const ENV_DEBUG_DIRECTORY: &'static str = "TRIANGULATE_SVG_OUTPUT_PATH";
-const ENV_DEBUG_NO_LABELS: &'static str = "TRIANGULATE_SVG_HIDE_LABELS";
-const ENV_DEBUG_LEVEL: &'static str = "TRIANGULATE_SVG_OUTPUT_LEVEL";
+const ENV_DEBUG_DIRECTORY: &str = "TRIANGULATE_SVG_OUTPUT_PATH";
+const ENV_DEBUG_NO_LABELS: &str = "TRIANGULATE_SVG_HIDE_LABELS";
+const ENV_DEBUG_LEVEL: &str = "TRIANGULATE_SVG_OUTPUT_LEVEL";
 
 fn main() {
     let matches = App::new("triangulate runner")
@@ -67,7 +67,10 @@ fn evaluate(matches: ArgMatches) -> Result<(), Box<dyn error::Error>> {
 
     match util::load_polygon_list(in_file) {
         Ok(t) => {
-            match t.triangulate::<builders::VecVecFanBuilder<_>>(&mut Vec::new()) {
+            let output = Vec::<Vec::<[f32; 2]>>::new();
+            let format = formats::DeindexedFanFormat::new(output);
+
+            match t.triangulate(format) {
                 Ok(triangulation) => {
                     if let Some(out_file) = matches.value_of(PARAM_OUT_FILE) {
                         let mut file = fs::File::create(out_file)?;
